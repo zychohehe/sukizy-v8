@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#100d24">
+  <title>Masuk · SUKIZY</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=Figtree:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/upgrade.css">
+  <script src="js/auth.js"></script>
+  <script>if (Auth.current()) location.replace('index.html');</script>
+</head>
+<body class="auth-page">
+  <div class="orbs" aria-hidden="true"><i></i><i></i><i></i></div>
+  <main class="auth">
+    <section class="auth-brand" aria-label="Tentang SUKIZY">
+      <a class="logo" href="login.html" aria-label="SUKIZY">
+        <svg viewBox="0 0 32 32" width="34" height="34" aria-hidden="true"><rect width="32" height="32" rx="10" fill="var(--sun)"/><path d="M9 9h14l-9 14h9" fill="none" stroke="#1a1638" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>SUKIZY</span>
+      </a>
+      <div class="brand-copy">
+        <h1>ZIP masuk,<br>repo langsung rapi.</h1>
+        <p>Masuk dengan token GitHub, pilih repo dari akunmu, lalu push ZIP dalam satu commit. Semua diproses di browsermu.</p>
+      </div>
+      <ul class="perks" aria-hidden="true"><li>Upload ZIP satu commit</li><li>Build APK &amp; Deploy web</li><li>Console tersinkron live</li></ul>
+      <div class="chips" aria-hidden="true">
+        <span style="--i:0">index.html</span>
+        <span style="--i:1">css/style.css</span>
+        <span style="--i:2">js/app.js</span>
+        <span style="--i:3">README.md</span>
+        <span class="repo" style="--i:4">main ✓ 1 commit</span>
+      </div>
+    </section>
+
+    <section class="auth-panel">
+      <div class="auth-card">
+        <h2 id="title">Masuk dengan GitHub</h2>
+        <p class="muted">Tempel token sekali, SUKIZY langsung terhubung ke akun dan daftar reposmu.</p>
+
+        <form id="f" novalidate>
+          <label class="field"><span>GitHub token</span>
+            <div class="pw">
+              <input id="pw" type="password" autocomplete="off" spellcheck="false" placeholder="ghp_… atau github_pat_…">
+              <button type="button" id="eye" class="eye" aria-label="Tampilkan token">Lihat</button>
+            </div>
+            <small id="tokType">Butuh izin <b>repo</b>, <b>workflow</b>, dan <b>delete_repo</b> (classic) atau Read and write (fine-grained).</small>
+            <button type="button" id="paste" class="ghost sm">Tempel dari clipboard</button>
+          </label>
+          <label class="check"><input id="remember" type="checkbox" checked> Tetap masuk di perangkat ini</label>
+          <p id="err" class="form-err" role="alert" hidden></p>
+          <button id="go" type="submit" class="primary">Masuk &amp; hubungkan akun</button>
+        </form>
+        <p class="note"><a class="link" href="https://github.com/settings/tokens/new?scopes=repo,workflow,delete_repo&amp;description=SUKIZY" target="_blank" rel="noopener">Buat token baru di GitHub</a><br>Token hanya disimpan di browser ini dan hanya dikirim ke api.github.com.</p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const $ = (s) => document.querySelector(s);
+    const f = $('#f'), err = $('#err'), go = $('#go');
+    $('#eye').onclick = (e) => {
+      const show = $('#pw').type === 'password';
+      $('#pw').type = show ? 'text' : 'password';
+      e.target.textContent = show ? 'Sembunyi' : 'Lihat';
+    };
+    $('#pw').addEventListener('input', (e) => {
+      const v = e.target.value.trim();
+      $('#tokType').textContent = !v ? 'Butuh izin repo, workflow, dan delete_repo (classic) atau Read and write (fine-grained).'
+        : /^github_pat_/.test(v) ? 'Terdeteksi: token fine-grained.' : /^gh[pousr]_/.test(v) ? 'Terdeteksi: token classic.' : 'Format token tidak dikenali.';
+    });
+    $('#paste').onclick = async () => {
+      try { $('#pw').value = (await navigator.clipboard.readText()).trim(); $('#pw').dispatchEvent(new Event('input')); } catch (e) { showErr('Izin clipboard ditolak. Tempel manual di kolom token.'); }
+    };
+    function showErr(msg) {
+      err.textContent = msg; err.hidden = false;
+      f.classList.remove('shake'); void f.offsetWidth; f.classList.add('shake');
+    }
+    f.addEventListener('submit', async (e) => {
+      e.preventDefault(); err.hidden = true;
+      go.disabled = true; go.classList.add('loading');
+      try {
+        await Auth.login($('#pw').value, $('#remember').checked);
+        document.body.classList.add('leaving');
+        setTimeout(() => location.replace('index.html'), 220);
+      } catch (ex) {
+        showErr(ex.message);
+        go.disabled = false; go.classList.remove('loading');
+      }
+    });
+  </script>
+</body>
+</html>

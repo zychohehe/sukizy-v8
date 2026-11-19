@@ -1,0 +1,33 @@
+name: Deploy Website (SUKIZY)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Siapkan folder situs
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/site"
+          rsync -a --exclude='.git' --exclude='.github' --exclude='node_modules' "./" "$RUNNER_TEMP/site/"
+          touch "$RUNNER_TEMP/site/.nojekyll"
+          if [ ! -f "$RUNNER_TEMP/site/index.html" ]; then echo "::warning::index.html tidak ditemukan di ."; fi
+          echo "File situs: $(find "$RUNNER_TEMP/site" -type f | wc -l)"
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ runner.temp }}/site
+      - id: deployment
+        uses: actions/deploy-pages@v4

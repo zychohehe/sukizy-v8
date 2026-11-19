@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#100d24">
+  <title>SUKIZY · ZIP ke GitHub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=Figtree:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/upgrade.css">
+  <script src="js/auth.js"></script>
+  <script>var ME = Auth.guard(); if (!ME) document.documentElement.className = 'blocked';</script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-in">
+      <a class="logo" href="index.html" aria-label="SUKIZY">
+        <svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><rect width="32" height="32" rx="10" fill="var(--sun)"/><path d="M9 9h14l-9 14h9" fill="none" stroke="#1a1638" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>SUKIZY</span>
+      </a>
+      <div class="me">
+        <button type="button" id="syncPill" class="sync-pill" title="Sinkron sekarang">Menyinkronkan…</button>
+        <span class="avatar" id="avatar" aria-hidden="true"></span>
+        <span class="me-name" id="meName"></span>
+        <button type="button" id="logout" class="ghost">Keluar</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="top">
+      <h1 id="hello">Halo!</h1>
+      <p>Kelola semua repo-mu dan push file ZIP dalam satu commit, dari satu tempat.</p>
+    </section>
+
+    <nav id="nav" class="nav" aria-label="Menu utama">
+      <button type="button" data-view="repos" aria-selected="true">Repo saya</button>
+      <button type="button" data-view="upload" aria-selected="false">Upload ZIP</button>
+      <button type="button" data-view="deploy" aria-selected="false">Deploy Web</button>
+      <button type="button" data-view="apk" aria-selected="false">Build APK</button>
+      <button type="button" data-view="perm" aria-selected="false">Izin</button>
+      <button type="button" data-view="hist" aria-selected="false">Riwayat</button>
+    </nav>
+
+    <div id="view-repos" class="view">
+      <div id="stats" class="stats"></div>
+      <section class="card feed-card" aria-labelledby="h-feed">
+        <h2 id="h-feed">Aktivitas GitHub <span id="feedLive" class="live">live</span></h2>
+        <div id="feed" class="feed"><p class="muted">Memuat aktivitas build &amp; deploy…</p></div>
+      </section>
+      <div class="tools">
+        <input id="q" type="text" placeholder="Cari repo…" autocomplete="off">
+        <select id="flt" aria-label="Filter"><option value="all">Semua</option><option value="public">Public</option><option value="private">Private</option><option value="fork">Fork</option></select>
+        <select id="srt" aria-label="Urutkan"><option value="pushed_at">Terbaru</option><option value="name">Nama A–Z</option><option value="stargazers_count">Bintang</option><option value="size">Ukuran</option></select>
+        <button type="button" id="refresh" class="ghost">Segarkan</button>
+        <button type="button" id="newRepo" class="sun">+ Repo baru</button>
+      </div>
+      <div id="repoGrid" class="rgrid"></div>
+    </div>
+
+    <div id="view-upload" class="view" hidden>
+
+    <section class="card" aria-labelledby="h-repo">
+      <h2 id="h-repo"><span class="step">1</span> Tujuan repo</h2>
+
+      <label class="field">
+        <span>Repo dari akun GitHub-mu</span>
+        <div class="pick">
+          <input id="repoSearch" type="text" list="repoList" autocomplete="off" spellcheck="false" placeholder="Cari atau pilih repo…">
+          <datalist id="repoList"></datalist>
+          <button type="button" id="sync" class="ghost">Sinkron</button>
+        </div>
+        <small id="repoInfo">Memuat repo…</small>
+      </label>
+
+      <div class="seg" role="radiogroup" aria-label="Mode repo">
+        <label><input type="radio" name="mode" value="existing" checked><span>Repo yang sudah ada</span></label>
+        <label><input type="radio" name="mode" value="new"><span>Buat repo baru</span></label>
+      </div>
+
+      <div class="grid">
+        <label class="field">
+          <span>Owner <em>(kosongkan = akun token)</em></span>
+          <input id="owner" type="text" autocomplete="off" spellcheck="false" placeholder="username atau organisasi">
+        </label>
+        <label class="field">
+          <span>Nama repo</span>
+          <input id="repo" type="text" autocomplete="off" spellcheck="false" placeholder="nama-repo">
+        </label>
+        <label class="field">
+          <span>Branch</span>
+          <input id="branch" type="text" list="branchList" autocomplete="off" spellcheck="false" value="main"><datalist id="branchList"></datalist>
+        </label>
+        <label class="field">
+          <span>Commit message</span>
+          <input id="message" type="text" value="Upload dari ZIP">
+        </label>
+      </div>
+
+      <label id="privateRow" class="check" hidden>
+        <input id="isPrivate" type="checkbox"> Jadikan repo baru bersifat private
+      </label>
+    </section>
+
+    <section class="card" aria-labelledby="h-zip">
+      <h2 id="h-zip"><span class="step">2</span> File ZIP</h2>
+      <div id="drop" class="drop" tabindex="0" role="button" aria-label="Pilih file ZIP">
+        <strong id="dropTitle">Tarik file .zip ke sini</strong>
+        <span id="dropSub">atau ketuk untuk memilih file</span>
+        <input id="zipInput" type="file" accept=".zip,application/zip" hidden>
+      </div>
+      <label class="check">
+        <input id="stripRoot" type="checkbox" checked> Hapus folder pembungkus (mis. <code>project-main/</code>) agar isinya langsung di root repo
+      </label>
+      <label class="check">
+        <input id="replaceAll" type="checkbox"> Ganti total: hapus file lama di branch yang tidak ada di ZIP
+      </label>
+    </section>
+
+    <section id="reviewCard" class="card" aria-labelledby="h-review" hidden>
+      <h2 id="h-review"><span class="step">3</span> Periksa file</h2>
+      <p id="summary" class="muted"></p>
+      <div class="row">
+        <button type="button" id="selAll" class="ghost">Pilih semua</button>
+        <button type="button" id="selNone" class="ghost">Kosongkan</button>
+      </div>
+      <div id="tree" class="tree"></div>
+    </section>
+
+    <section class="card" aria-labelledby="h-push">
+      <h2 id="h-push"><span class="step">4</span> Push</h2>
+      <button id="pushBtn" type="button" class="primary" disabled>Push ke GitHub</button>
+      <div class="bar" id="bar" hidden><div id="barFill"></div></div>
+      <p id="barText" class="muted" aria-live="polite"></p>
+      <div id="result" class="result" hidden></div>
+      <div id="log" class="log" aria-live="polite"></div>
+    </section>
+  
+    </div>
+
+    <div id="view-deploy" class="view" hidden>
+      <section class="card" aria-labelledby="h-dep">
+        <h2 id="h-dep">Deploy website lewat GitHub</h2>
+        <p class="muted">Aktifkan GitHub Pages untuk repomu dan dapatkan link situs publik <code>username.github.io/repo</code>. Untuk repo web statis dengan <code>index.html</code>.</p>
+        <label class="field"><span>Repo</span><input id="depRepo" type="text" list="repoList" autocomplete="off" spellcheck="false" placeholder="owner/nama-repo"></label>
+        <div id="depStatus" class="dep-status" hidden></div>
+        <div class="seg" role="radiogroup" aria-label="Mode deploy">
+          <label><input type="radio" name="depMode" value="actions" checked><span>Otomatis (Actions)</span></label>
+          <label><input type="radio" name="depMode" value="branch"><span>Dari branch</span></label>
+        </div>
+        <label class="field"><span>Folder situs</span>
+          <select id="depFolder"><option value="/">Root (/)</option><option value="docs">docs/</option><option value="dist">dist/</option><option value="public">public/</option><option value="build">build/</option></select>
+          <small id="depHint"></small>
+        </label>
+        <label id="depAutoRow" class="check"><input id="depAuto" type="checkbox" checked> Deploy ulang otomatis setiap ada push ke branch utama</label>
+        <button id="depGo" type="button" class="primary">Deploy sekarang</button>
+        <div id="depRun" class="run" hidden></div>
+        <p class="muted" style="margin-top:14px">Token perlu izin <code>repo</code> (+ <code>workflow</code> untuk mode Actions). Fine-grained: Pages, Actions, dan Workflows = Read and write. Repo private butuh paket GitHub berbayar.</p>
+      </section>
+    </div>
+
+    <div id="view-apk" class="view" hidden>
+      <section class="card" aria-labelledby="h-apk">
+        <h2 id="h-apk">Build APK dari repo</h2>
+        <p class="muted">SUKIZY memasang workflow GitHub Actions ke repomu, menjalankannya, lalu APK muncul di Releases. Pakai file repomu, pilih template siap build, atau bungkus website online jadi APK.</p>
+        <label class="field"><span>Repo</span><input id="apkRepo" type="text" list="repoList" autocomplete="off" spellcheck="false" placeholder="owner/nama-repo"></label>
+        <div class="grid">
+          <label class="field"><span>Nama aplikasi</span><input id="apkName" type="text" autocomplete="off"></label>
+          <label class="field"><span>Package ID</span><input id="apkId" type="text" autocomplete="off" spellcheck="false" placeholder="com.sukizy.app"></label>
+        </div>
+        <label class="field"><span>Template <em>(opsional)</em></span>
+          <select id="apkTpl"></select>
+          <small id="tplHint"></small>
+        </label>
+        <label class="field" id="apkUrlRow" hidden><span>URL website</span><input id="apkUrl" type="text" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://username.github.io/repo/"></label>
+        <p class="muted perm-info">Izin aplikasi: <b id="apkPermInfo"></b> <button type="button" class="link" id="apkPermGo">Atur izin</button></p>
+        <button id="apkGo" type="button" class="primary">Build APK</button>
+        <div id="apkRun" class="run" hidden></div>
+      </section>
+      <section class="card" aria-labelledby="h-apkl">
+        <h2 id="h-apkl">APK sebelumnya</h2>
+        <div id="apkList" class="hist"><p class="muted">Pilih repo untuk melihat APK yang pernah dibuat.</p></div>
+      </section>
+    </div>
+
+    <div id="view-perm" class="view" hidden>
+      <section class="card" aria-labelledby="h-pt">
+        <h2 id="h-pt">Izin token GitHub</h2>
+        <p class="muted">Fitur Sukizy butuh izin tertentu di token-mu. Yang kurang bisa langsung dibuatkan token barunya.</p>
+        <div id="tokPerm" class="plist"></div>
+        <div class="row"><button type="button" id="tokCheck" class="ghost">Periksa ulang</button>
+        <a class="link" target="_blank" rel="noopener" href="https://github.com/settings/tokens/new?scopes=repo,workflow,delete_repo&amp;description=SUKIZY">Buat token dengan semua izin</a></div>
+      </section>
+      <section class="card" aria-labelledby="h-pa">
+        <h2 id="h-pa">Izin aplikasi (APK)</h2>
+        <p class="muted">Pilih izin Android yang dipasang ke APK. Dikirim otomatis saat Build APK dan tersimpan di akun ini.</p>
+        <div id="appPerm" class="plist"></div>
+      </section>
+    </div>
+
+    <div id="view-hist" class="view" hidden>
+    <section id="histCard" class="card" aria-labelledby="h-hist">
+      <h2 id="h-hist">Riwayat push</h2>
+      <div id="hist" class="hist"></div>
+      <button type="button" id="histClear" class="ghost">Hapus riwayat</button>
+    </section>
+    </div>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="js/zip.js"></script>
+  <script src="js/github.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/extra.js"></script>
+  <script src="js/dash.js"></script>
+  <script src="js/perm.js"></script>
+  <script src="js/sync.js"></script>
+  <script src="js/pages-yml.js"></script>
+  <script src="js/deploy.js"></script>
+  <script src="js/apk-yml.js"></script>
+  <script src="js/templates.js"></script>
+  <script src="js/apk.js"></script>
+  <script>
+    (function () {
+      if (!ME) return;
+      document.getElementById('hello').textContent = 'Halo, ' + ME.name.split(' ')[0] + '!';
+      document.getElementById('meName').textContent = '@' + ME.login;
+      var av = document.getElementById('avatar');
+      av.textContent = '';
+      var img = new Image(); img.src = ME.avatar + '&s=68'; img.alt = '';
+      av.appendChild(img);
+      document.getElementById('logout').addEventListener('click', Auth.logout);
+      if (!sessionStorage.getItem('sk_w')) { sessionStorage.setItem('sk_w', '1'); Toast.show('success', 'Terhubung sebagai @' + ME.login); }
+    })();
+  </script>
+</body>
+</html>
